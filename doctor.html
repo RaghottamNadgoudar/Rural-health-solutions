@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Doctor Portal</title>
+    <style>
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      #patientInfo {
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 4px;
+        margin-top: 20px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+
+      .info-row {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .patients-list {
+        border-right: 1px solid #ccc;
+        padding-right: 20px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .patient-card {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .patient-card:hover {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .patient-card.verified {
+        border-left: 4px solid #4caf50;
+      }
+
+      .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+      }
+
+      .status-badge.pending {
+        background-color: #ffd700;
+      }
+
+      .status-badge.verified {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .patient-summary h3 {
+        margin: 0 0 10px 0;
+      }
+
+      .patient-summary p {
+        margin: 5px 0;
+        color: #666;
+      }
+
+      .patient-details {
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Doctor Portal</h1>
+      <div class="dashboard">
+        <div class="patients-list" id="patientsList">
+          <!-- Patient cards will be inserted here -->
+        </div>
+        <div class="patient-details">
+          <h2>Patient Information</h2>
+          <div id="patientDetails">
+            <p>Select a patient to view details</p>
+          </div>
+          <button id="verifyBtn" style="display: none">Verify Diagnosis</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      function updatePatientsList() {
+        // Get all patients data
+        const allPatientsData = JSON.parse(
+          localStorage.getItem("allPatients") || "[]"
+        );
+        const patientsListDiv = document.getElementById("patientsList");
+
+        if (allPatientsData.length === 0) {
+          patientsListDiv.innerHTML = "<p>No patients available</p>";
+          return;
+        }
+
+        patientsListDiv.innerHTML = allPatientsData
+          .map(
+            (patient, index) => `
+            <div class="patient-card ${
+              patient.verified ? "verified" : ""
+            }" onclick="showPatientDetails(${index})">
+                <div class="patient-summary">
+                    <h3>${patient.name}</h3>
+                    <p>Age: ${patient.age}</p>
+                    <p>Submitted: ${new Date(
+                      patient.timestamp
+                    ).toLocaleString()}</p>
+                </div>
+                <div class="status-badge ${
+                  patient.verified ? "verified" : "pending"
+                }">
+                    ${patient.verified ? "Verified" : "Pending"}
+                </div>
+            </div>
+        `
+          )
+          .join("");
+      }
+
+      function showPatientDetails(index) {
+        const allPatientsData = JSON.parse(
+          localStorage.getItem("allPatients") || "[]"
+        );
+        const patientData = allPatientsData[index];
+        const patientDetails = document.getElementById("patientDetails");
+
+        if (patientData) {
+          patientDetails.innerHTML = `
+                <div class="info-row">
+                    <strong>Name:</strong> ${patientData.name}
+                </div>
+                <div class="info-row">
+                    <strong>Age:</strong> ${patientData.age}
+                </div>
+                <div class="info-row">
+                    <strong>Phone:</strong> ${patientData.phone}
+                </div>
+                <div class="info-row">
+                    <strong>Email:</strong> ${patientData.email}
+                </div>
+                <div class="info-row">
+                    <strong>Aadhar:</strong> ${patientData.aadhar}
+                </div>
+                <div class="info-row">
+                    <strong>Symptoms:</strong> ${patientData.symptoms}
+                </div>
+                <div class="info-row">
+                    <strong>Submitted:</strong> ${new Date(
+                      patientData.timestamp
+                    ).toLocaleString()}
+                </div>
+            `;
+
+          // Update verify button to include patient index
+          const verifyBtn = document.getElementById("verifyBtn");
+          verifyBtn.onclick = () => verifyPatient(index);
+          verifyBtn.style.display = patientData.verified ? "none" : "block";
+        }
+      }
+
+      function verifyPatient(index) {
+        const allPatientsData = JSON.parse(
+          localStorage.getItem("allPatients") || "[]"
+        );
+        allPatientsData[index].verified = true;
+        localStorage.setItem("allPatients", JSON.stringify(allPatientsData));
+        alert("Diagnosis verified!");
+        updatePatientsList();
+        showPatientDetails(index);
+      }
+
+      // Update patient information periodically
+      setInterval(updatePatientsList, 1000);
+      updatePatientsList();
+    </script>
+  </body>
+</html>

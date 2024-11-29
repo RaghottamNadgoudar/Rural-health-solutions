@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Patient Portal</title>
+    <style>
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      input,
+      textarea {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      button {
+        padding: 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      #verificationBadge {
+        padding: 5px 10px;
+        border-radius: 4px;
+        background-color: #ffd700;
+      }
+
+      #verificationBadge.verified {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .form-group label {
+        font-weight: bold;
+      }
+
+      .form-group label::after {
+        content: " *";
+        color: red;
+      }
+
+      .form-group label:not([for="email"]):not([for="aadhar"])::after {
+        content: " *";
+        color: red;
+      }
+
+      input:invalid,
+      textarea:invalid {
+        border-color: #ff6b6b;
+      }
+
+      input:valid,
+      textarea:valid {
+        border-color: #51cf66;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Patient Portal</h1>
+      <form id="patientForm">
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input
+            type="text"
+            id="name"
+            placeholder="Enter your full name"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="age">Age *</label>
+          <input
+            type="number"
+            id="age"
+            placeholder="Enter your age"
+            required
+            min="0"
+            max="150"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number *</label>
+          <input
+            type="tel"
+            id="phone"
+            placeholder="Enter your phone number"
+            pattern="[0-9]{10}"
+            title="Please enter a valid 10-digit phone number"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email ID</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter your email (optional)"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="aadhar">Aadhar Number</label>
+          <input
+            type="text"
+            id="aadhar"
+            placeholder="Enter your Aadhar number (optional)"
+            pattern="[0-9]{12}"
+            title="Please enter a valid 12-digit Aadhar number"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="symptoms">Symptoms *</label>
+          <textarea
+            id="symptoms"
+            placeholder="Describe your symptoms in detail"
+            required
+          ></textarea>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+      <div id="diagnosisStatus">
+        <p>Verification Status: <span id="verificationBadge">Pending</span></p>
+      </div>
+    </div>
+    <script>
+      document
+        .getElementById("patientForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const patientData = {
+            name: document.getElementById("name").value,
+            age: document.getElementById("age").value,
+            phone: document.getElementById("phone").value,
+            email: document.getElementById("email").value || "Not provided",
+            aadhar: document.getElementById("aadhar").value || "Not provided",
+            symptoms: document.getElementById("symptoms").value,
+            verified: false,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Validate phone number
+          if (!/^\d{10}$/.test(patientData.phone)) {
+            alert("Please enter a valid 10-digit phone number");
+            return;
+          }
+
+          // Validate Aadhar if provided
+          if (
+            patientData.aadhar !== "Not provided" &&
+            !/^\d{12}$/.test(patientData.aadhar)
+          ) {
+            alert("Please enter a valid 12-digit Aadhar number");
+            return;
+          }
+
+          // Get existing patients and add new patient
+          const allPatients = JSON.parse(
+            localStorage.getItem("allPatients") || "[]"
+          );
+          allPatients.push(patientData);
+          localStorage.setItem("allPatients", JSON.stringify(allPatients));
+
+          // Store current patient ID for verification status
+          localStorage.setItem("currentPatientIndex", allPatients.length - 1);
+
+          alert("Information submitted successfully!");
+          e.target.reset();
+        });
+
+      // Check for verification status periodically
+      setInterval(() => {
+        const currentIndex = localStorage.getItem("currentPatientIndex");
+        if (currentIndex === null) return;
+
+        const allPatients = JSON.parse(
+          localStorage.getItem("allPatients") || "[]"
+        );
+        const currentPatient = allPatients[currentIndex];
+
+        if (!currentPatient) return;
+
+        const badge = document.getElementById("verificationBadge");
+        if (currentPatient.verified) {
+          badge.textContent = "Verified";
+          badge.classList.add("verified");
+        } else {
+          badge.textContent = "Pending";
+          badge.classList.remove("verified");
+        }
+      }, 1000);
+    </script>
+  </body>
+</html>
